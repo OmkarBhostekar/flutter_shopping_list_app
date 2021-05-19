@@ -12,6 +12,26 @@ final itemListControllerProvider =
   return ItemListController(ref.read, user?.uid);
 });
 
+enum ItemListFilter { all, obtained }
+
+final itemListFilterProvider =
+    StateProvider<ItemListFilter>((_) => ItemListFilter.all);
+
+final filteredItemListProvider = Provider<List<Item>>((ref) {
+  final itemFilterState = ref.watch(itemListFilterProvider).state;
+  final itemListState = ref.watch(itemListControllerProvider.state);
+  return itemListState.maybeWhen(
+      data: (items) {
+        switch (itemFilterState) {
+          case ItemListFilter.obtained:
+            return items.where((item) => item.obtained).toList();
+          default:
+            return items;
+        }
+      },
+      orElse: () => []);
+});
+
 class ItemListController extends StateNotifier<AsyncValue<List<Item>>> {
   final Reader _read;
   final String? _userId;
